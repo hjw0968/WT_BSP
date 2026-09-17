@@ -94,9 +94,10 @@
  * ⚠️ 改完必须与 sdkconfig.defaults 里选中的传感器模式一致。 */
 #define BOARD_CSI_WIDTH  CONFIG_ROBO_CAMERA_WIDTH
 #define BOARD_CSI_HEIGHT CONFIG_ROBO_CAMERA_HEIGHT
-#define BOARD_CSI_FPS 30
+#define BOARD_CSI_FPS CONFIG_ROBO_CAMERA_FPS
 
-#define BOARD_CSI_BUF_COUNT 3
+// buffer 数量
+#define BOARD_CSI_BUF_COUNT 2
 
 #define BOARD_I2C_SCAN_TIMEOUT_MS 200
 
