@@ -85,9 +85,17 @@
 #define BOARD_CSI_SCCB_SDA_PIN 7
 #define BOARD_CSI_RESET_PIN -1
 #define BOARD_CSI_PWDN_PIN -1
-#define BOARD_CSI_WIDTH 1280
-#define BOARD_CSI_HEIGHT 960
-#define BOARD_CSI_FPS 45
+
+/* 分辨率不再由 BSP 自己决定：跟随应用工程的 Kconfig（ROBO_CAMERA_WIDTH/HEIGHT），
+ * 与 main/camera_driver.h 的 CAMERA_WIDTH/HEIGHT 是同一组值、同一个来源。
+ * 换传感器/换模式只改 Kconfig 一处，别在这里写数字 —— 曾经 BSP 与应用层各写一份，
+ * 换 SC2336 时只改了一边，CSI 回调上报的尺寸与应用层期待的不一致，
+ * 帧回调的尺寸守卫把每一帧静默丢掉，表现为"等新帧超时"。
+ * ⚠️ 改完必须与 sdkconfig.defaults 里选中的传感器模式一致。 */
+#define BOARD_CSI_WIDTH  CONFIG_ROBO_CAMERA_WIDTH
+#define BOARD_CSI_HEIGHT CONFIG_ROBO_CAMERA_HEIGHT
+#define BOARD_CSI_FPS 30
+
 #define BOARD_CSI_BUF_COUNT 3
 
 #define BOARD_I2C_SCAN_TIMEOUT_MS 200
@@ -95,7 +103,10 @@
 /* I2C 设备地址定义 */
 #define BOARD_I2C_ADDR_DISPLAY  0x28
 #define BOARD_I2C_ADDR_TOUCH    0x55
-#define BOARD_I2C_ADDR_CAMERA   0x36
+
+/* SC2336 0x30 */
+/* OV5647 0x36 */
+#define BOARD_I2C_ADDR_CAMERA   0x30
 
 #define BOARD_TOUCH_I2C_PORT 0
 #define BOARD_TOUCH_I2C_SDA_PIN 7
