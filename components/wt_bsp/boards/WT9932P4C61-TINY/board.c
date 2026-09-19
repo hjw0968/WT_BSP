@@ -105,8 +105,10 @@
 #define BOARD_I2C_ADDR_DISPLAY  0x28
 #define BOARD_I2C_ADDR_TOUCH    0x55
 
-/* SC2336 0x30 */
-/* OV5647 0x36 */
+/* SC2336  7-bit SCCB: 0x30 */
+/* OV5647  7-bit SCCB: 0x36 */
+/* OV2710  7-bit SCCB: 0x36 */
+/* GC2053  7-bit SCCB: 0x37 */
 #define BOARD_I2C_ADDR_CAMERA   0x30
 
 #define BOARD_TOUCH_I2C_PORT 0
