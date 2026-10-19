@@ -153,6 +153,9 @@ static void board_indicate_camera_failure(void);
 static const char *TAG = "board";
 
 static bool s_board_is_init = false;
+#if WT_BSP_RGB_ENABLED
+static bool s_rgb_ready;
+#endif
 #if BOARD_I2C_FEATURE_ENABLED
 static i2c_master_bus_handle_t s_shared_i2c_bus = NULL;
 #endif
@@ -203,6 +206,7 @@ wt_bsp_interface_t *board_get_bsp_interface(void)
 #if CONFIG_WT_BSP_ENABLE_USB_DEVICE_UVC && WT_BSP_RGB_ENABLED
 static void board_indicate_camera_failure(void)
 {
+    if (!s_rgb_ready) return;
     esp_err_t ret = wt_bsp_rgb_set_color(&s_bsp_rgb, (wt_bsp_rgb_color_t) {
         .r = 255,
         .g = 0,
@@ -316,12 +320,11 @@ static esp_err_t board_init(void)
         .format = BOARD_RGB_FORMAT,
         .invert_out = BOARD_RGB_INVERT_OUT,
     });
-    if (ret != ESP_OK) {
-#if WT_BSP_BUTTON_ENABLED
-        wt_bsp_button_deinit(&s_bsp_button);
-#endif
-        ESP_LOGE(TAG, "Failed to initialize RGB: %s", esp_err_to_name(ret));
-        return ret;
+    s_rgb_ready = ret == ESP_OK;
+    if (!s_rgb_ready) {
+        /* RGB is auxiliary. Its initializer already releases partial resources;
+         * continue other features, whose errors still fail board initialization. */
+        ESP_LOGW(TAG, "RGB unavailable; continuing without indicator: %s", esp_err_to_name(ret));
     }
 #endif
 
@@ -348,6 +351,7 @@ static esp_err_t board_init(void)
     if (ret != ESP_OK) {
 #if WT_BSP_RGB_ENABLED
         wt_bsp_rgb_deinit(&s_bsp_rgb);
+        s_rgb_ready = false;
 #endif
 #if WT_BSP_BUTTON_ENABLED
         wt_bsp_button_deinit(&s_bsp_button);
@@ -392,6 +396,7 @@ static esp_err_t board_init(void)
 #endif
 #if WT_BSP_RGB_ENABLED
         wt_bsp_rgb_deinit(&s_bsp_rgb);
+        s_rgb_ready = false;
 #endif
 #if WT_BSP_BUTTON_ENABLED
         wt_bsp_button_deinit(&s_bsp_button);
@@ -573,6 +578,7 @@ static esp_err_t board_deinit(void)
     // Deinitialize RGB
 #if WT_BSP_RGB_ENABLED
     ret = wt_bsp_rgb_deinit(&s_bsp_rgb);
+    s_rgb_ready = false;
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to deinitialize RGB: %s", esp_err_to_name(ret));
     }
@@ -609,7 +615,7 @@ static wt_bsp_button_t board_get_button(void)
 static wt_bsp_rgb_t board_get_rgb(void)
 {
 #if WT_BSP_RGB_ENABLED
-    return &s_bsp_rgb;
+    return s_rgb_ready ? &s_bsp_rgb : NULL;
 #else
     return NULL;
 #endif
